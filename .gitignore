@@ -1,0 +1,29 @@
+# Godot 4 — generated files
+.godot/
+*.translation
+
+# Mono / .NET build artifacts
+.mono/
+data_*/
+mono_crash.*.json
+bin/
+obj/
+*.user
+*.suo
+*.vs/
+.vs/
+.idea/
+
+# Rider / Visual Studio
+*.sln.DotSettings.user
+*.csproj.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Export templates cache
+export_presets.cfg
+
+# Saves are local-only (GDPR) — never commit
+saves/
