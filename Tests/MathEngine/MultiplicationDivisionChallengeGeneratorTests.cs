@@ -54,8 +54,7 @@ public sealed class MultiplicationDivisionChallengeGeneratorTests
             divisionChecks++;
             (int dividend, int divisor) = ParseDivision(c.QuestionText);
 
-            Assert.Equal(0, dividend % divisor,
-                $"Non-integer result: {dividend} ÷ {divisor} = {(double)dividend / divisor}");
+            Assert.Equal(0, dividend % divisor);
         }
 
         // Ensure we actually tested enough division cases

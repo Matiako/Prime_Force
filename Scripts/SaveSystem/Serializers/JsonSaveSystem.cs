@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Godot;
+using FileAccess = Godot.FileAccess;
 using PrimeForce.SaveSystem.Interfaces;
 
 namespace PrimeForce.SaveSystem.Serializers;
