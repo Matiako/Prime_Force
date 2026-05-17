@@ -183,33 +183,37 @@ anchor_bottom = 1.0
 color = Color(0.15, 0.15, 0.15, 0.45)
 mouse_filter = 2
 
-[node name="DPadUp" type="TextureButton" parent="RootControl/DPadArea"]
+[node name="DPadUp" type="Button" parent="RootControl/DPadArea"]
 layout_mode = 0
 offset_left = 60.0
 offset_top = 0.0
 offset_right = 140.0
 offset_bottom = 80.0
+text = "▲"
 
-[node name="DPadDown" type="TextureButton" parent="RootControl/DPadArea"]
+[node name="DPadDown" type="Button" parent="RootControl/DPadArea"]
 layout_mode = 0
 offset_left = 60.0
 offset_top = 120.0
 offset_right = 140.0
 offset_bottom = 200.0
+text = "▼"
 
-[node name="DPadLeft" type="TextureButton" parent="RootControl/DPadArea"]
+[node name="DPadLeft" type="Button" parent="RootControl/DPadArea"]
 layout_mode = 0
 offset_left = 0.0
 offset_top = 60.0
 offset_right = 80.0
 offset_bottom = 140.0
+text = "◄"
 
-[node name="DPadRight" type="TextureButton" parent="RootControl/DPadArea"]
+[node name="DPadRight" type="Button" parent="RootControl/DPadArea"]
 layout_mode = 0
 offset_left = 120.0
 offset_top = 60.0
 offset_right = 200.0
 offset_bottom = 140.0
+text = "►"
 
 ; BOTTOM-RIGHT — Action buttons: SKOK (left, tall) | BLOK over ATAK (right VBox)
 ; Layout: HBox[ JumpButton | VBox[ BlockButton / AttackButton ] ]

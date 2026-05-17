@@ -24,10 +24,10 @@ public partial class GameUiController : CanvasLayer
 
     // ── D-Pad ─────────────────────────────────────────────────────────────────
 
-    [Export] private TextureButton DPadUp    = null!;
-    [Export] private TextureButton DPadDown  = null!;
-    [Export] private TextureButton DPadLeft  = null!;
-    [Export] private TextureButton DPadRight = null!;
+    [Export] private Button DPadUp    = null!;
+    [Export] private Button DPadDown  = null!;
+    [Export] private Button DPadLeft  = null!;
+    [Export] private Button DPadRight = null!;
 
     // ── Action buttons ────────────────────────────────────────────────────────
 
