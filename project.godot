@@ -30,6 +30,10 @@ window/size/viewport_height=800
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[autoload]
+
+GameServices="*res://Scripts/Core/Services/GameServices.cs"
+
 [dotnet]
 
 project/assembly_name="Prime_Force"

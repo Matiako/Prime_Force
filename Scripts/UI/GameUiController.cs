@@ -1,44 +1,44 @@
 using Godot;
+using PrimeForce.Core.Events;
+using PrimeForce.Core.Interfaces;
+using PrimeForce.Core.Services;
 
 namespace PrimeForce.UI;
 
 /// <summary>
-/// Single-responsibility HUD controller.
-/// Owns all UI node references, exposes stat-update methods,
-/// and emits Godot signals for game logic to consume.
+/// Mobile HUD controller. Wires all UI nodes via GetNode (no Inspector [Export] needed),
+/// reads initial state from PlayerProgressionManager, and reacts to PlayerLevelUpEvent.
 ///
-/// Scene wiring (Inspector):
-///   Assign every [Export] field.
-///   WeaponSlotIcons are resolved automatically by node path on _Ready.
+/// Outputs Godot signals for game-world consumers (NinjaController etc.):
+///   MovementChanged(Vector2) — emitted on every D-Pad press/release
+///   JumpPressed / AttackPressed / BlockPressed — emitted on button press
+/// Connect these signals in the parent game scene.
 /// </summary>
 public partial class GameUiController : CanvasLayer
 {
-    // ── Stats ─────────────────────────────────────────────────────────────────
+    // ── Cached node references ────────────────────────────────────────────────
 
-    [Export] private Label       GoldLabel      = null!;
-    [Export] private Label       GeldLabel      = null!;
-    [Export] private Label       MetallLabel    = null!;
-    [Export] private Label       KristalleLabel = null!;
-    [Export] private Label       LevelLabel     = null!;
-    [Export] private ProgressBar EnergyBar      = null!;
+    private Label       _goldLabel      = null!;
+    private Label       _geldLabel      = null!;
+    private Label       _metallLabel    = null!;
+    private Label       _kristalleLabel = null!;
+    private Label       _levelLabel     = null!;
+    private ProgressBar _energyBar      = null!;
 
-    // ── D-Pad ─────────────────────────────────────────────────────────────────
+    private Button _dpadUp    = null!;
+    private Button _dpadDown  = null!;
+    private Button _dpadLeft  = null!;
+    private Button _dpadRight = null!;
 
-    [Export] private Button DPadUp    = null!;
-    [Export] private Button DPadDown  = null!;
-    [Export] private Button DPadLeft  = null!;
-    [Export] private Button DPadRight = null!;
+    private Button _jumpButton   = null!;
+    private Button _attackButton = null!;
+    private Button _blockButton  = null!;
 
-    // ── Action buttons ────────────────────────────────────────────────────────
-
-    [Export] private Button JumpButton   = null!;
-    [Export] private Button AttackButton = null!;
-    [Export] private Button BlockButton  = null!;
-
-    // Resolved by path — no Inspector wiring needed for slots
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[7];
 
-    // ── Output signals (consumed by game logic, never by this script) ─────────
+    private IEventBus? _eventBus;
+
+    // ── Output signals ────────────────────────────────────────────────────────
 
     [Signal] public delegate void MovementChangedEventHandler(Vector2 direction);
     [Signal] public delegate void JumpPressedEventHandler();
@@ -49,65 +49,124 @@ public partial class GameUiController : CanvasLayer
 
     public override void _Ready()
     {
+        ResolveNodes();
         ResolveWeaponSlotIcons();
         ConnectDPad();
         ConnectActionButtons();
+        InitStatsFromProgression();
+        SubscribeToEvents();
     }
 
-    // ── Public API — resource stats ───────────────────────────────────────────
+    public override void _ExitTree()
+    {
+        _eventBus?.Unsubscribe<PlayerLevelUpEvent>(OnPlayerLevelUp);
+    }
 
-    public void UpdateGold(int amount)      => GoldLabel.Text      = $"Gold: {amount}";
-    public void UpdateGeld(int amount)      => GeldLabel.Text      = $"Geld: {amount}";
-    public void UpdateMetall(int amount)    => MetallLabel.Text    = $"Metall: {amount}";
-    public void UpdateKristalle(int amount) => KristalleLabel.Text = $"Kristalle: {amount}";
-    public void UpdateLevel(int level)      => LevelLabel.Text     = $"Level: {level}";
+    // ── Public API — stats bar ────────────────────────────────────────────────
 
-    /// <param name="value">0.0 – 100.0</param>
-    public void UpdateEnergy(float value)   => EnergyBar.Value     = value;
+    public void UpdateGold(int amount)      => _goldLabel.Text      = $"Gold: {amount}";
+    public void UpdateGeld(int amount)      => _geldLabel.Text      = $"Geld: {amount}";
+    public void UpdateMetall(int amount)    => _metallLabel.Text    = $"Metall: {amount}";
+    public void UpdateKristalle(int amount) => _kristalleLabel.Text = $"Kristalle: {amount}";
+    public void UpdateLevel(int level)      => _levelLabel.Text     = $"Level: {level}";
+    public void UpdateEnergy(float value)   => _energyBar.Value     = value;
 
     // ── Public API — hotbar ───────────────────────────────────────────────────
 
-    /// <summary>Sets the icon texture for the given hotbar slot (0–6).</summary>
     public void SetWeaponSlotIcon(int slot, Texture2D? icon)
     {
         if ((uint)slot >= (uint)_weaponSlotIcons.Length) return;
         _weaponSlotIcons[slot].Texture = icon;
     }
 
-    // ── Private — scene wiring ────────────────────────────────────────────────
+    // ── Private — node resolution ─────────────────────────────────────────────
+
+    private void ResolveNodes()
+    {
+        const string stats  = "RootControl/TopArea/TopVBox/StatsBar";
+        _goldLabel      = GetNode<Label>($"{stats}/GoldLabel");
+        _geldLabel      = GetNode<Label>($"{stats}/GeldLabel");
+        _metallLabel    = GetNode<Label>($"{stats}/MetallLabel");
+        _kristalleLabel = GetNode<Label>($"{stats}/KristalleLabel");
+        _levelLabel     = GetNode<Label>($"{stats}/LevelLabel");
+        _energyBar      = GetNode<ProgressBar>($"{stats}/EnergyBar");
+
+        const string dpad   = "RootControl/DPadArea";
+        _dpadUp    = GetNode<Button>($"{dpad}/DPadUp");
+        _dpadDown  = GetNode<Button>($"{dpad}/DPadDown");
+        _dpadLeft  = GetNode<Button>($"{dpad}/DPadLeft");
+        _dpadRight = GetNode<Button>($"{dpad}/DPadRight");
+
+        const string action = "RootControl/ActionArea/HBoxContainer";
+        _jumpButton   = GetNode<Button>($"{action}/JumpButton");
+        _attackButton = GetNode<Button>($"{action}/AttackBlockVBox/AttackButton");
+        _blockButton  = GetNode<Button>($"{action}/AttackBlockVBox/BlockButton");
+    }
 
     private void ResolveWeaponSlotIcons()
     {
-        const string hotbarPath = "RootControl/TopArea/TopVBox/Hotbar";
+        const string hotbar = "RootControl/TopArea/TopVBox/Hotbar";
         for (int i = 0; i < _weaponSlotIcons.Length; i++)
-            _weaponSlotIcons[i] = GetNode<TextureRect>($"{hotbarPath}/WeaponSlot{i}/WeaponIcon");
+            _weaponSlotIcons[i] = GetNode<TextureRect>($"{hotbar}/WeaponSlot{i}/WeaponIcon");
     }
+
+    // ── Private — signal wiring ───────────────────────────────────────────────
 
     private void ConnectDPad()
     {
-        DPadUp.ButtonDown    += OnDPadChanged;
-        DPadDown.ButtonDown  += OnDPadChanged;
-        DPadLeft.ButtonDown  += OnDPadChanged;
-        DPadRight.ButtonDown += OnDPadChanged;
-        DPadUp.ButtonUp      += OnDPadChanged;
-        DPadDown.ButtonUp    += OnDPadChanged;
-        DPadLeft.ButtonUp    += OnDPadChanged;
-        DPadRight.ButtonUp   += OnDPadChanged;
+        _dpadUp.ButtonDown    += OnDPadChanged;
+        _dpadUp.ButtonUp      += OnDPadChanged;
+        _dpadDown.ButtonDown  += OnDPadChanged;
+        _dpadDown.ButtonUp    += OnDPadChanged;
+        _dpadLeft.ButtonDown  += OnDPadChanged;
+        _dpadLeft.ButtonUp    += OnDPadChanged;
+        _dpadRight.ButtonDown += OnDPadChanged;
+        _dpadRight.ButtonUp   += OnDPadChanged;
     }
 
     private void ConnectActionButtons()
     {
-        JumpButton.Pressed   += () => EmitSignal("JumpPressed");
-        AttackButton.Pressed += () => EmitSignal("AttackPressed");
-        BlockButton.Pressed  += () => EmitSignal("BlockPressed");
+        _jumpButton.Pressed   += () => EmitSignal(SignalName.JumpPressed);
+        _attackButton.Pressed += () => EmitSignal(SignalName.AttackPressed);
+        _blockButton.Pressed  += () => EmitSignal(SignalName.BlockPressed);
     }
+
+    // ── Private — progression init & event subscription ───────────────────────
+
+    private void InitStatsFromProgression()
+    {
+        if (GameServices.Instance is null) return;
+        if (!GameServices.Instance.IsRegistered<PlayerProgressionManager>()) return;
+
+        var data = GameServices.Instance.Get<PlayerProgressionManager>().Data;
+        UpdateLevel(data.Level);
+        _energyBar.MaxValue = data.MaxHealth;
+        _energyBar.Value    = data.MaxHealth;
+    }
+
+    private void SubscribeToEvents()
+    {
+        if (GameServices.Instance is null) return;
+        if (!GameServices.Instance.IsRegistered<IEventBus>()) return;
+
+        _eventBus = GameServices.Instance.Get<IEventBus>();
+        _eventBus.Subscribe<PlayerLevelUpEvent>(OnPlayerLevelUp);
+    }
+
+    // ── Private — handlers ────────────────────────────────────────────────────
 
     private void OnDPadChanged()
     {
         var direction = new Vector2(
-            (DPadRight.ButtonPressed ? 1f : 0f) - (DPadLeft.ButtonPressed ? 1f : 0f),
-            (DPadDown.ButtonPressed  ? 1f : 0f) - (DPadUp.ButtonPressed   ? 1f : 0f)
-        );
-        EmitSignal("MovementChanged", direction);
+            (_dpadRight.ButtonPressed ? 1f : 0f) - (_dpadLeft.ButtonPressed ? 1f : 0f),
+            (_dpadDown.ButtonPressed  ? 1f : 0f) - (_dpadUp.ButtonPressed   ? 1f : 0f));
+        EmitSignal(SignalName.MovementChanged, direction);
+    }
+
+    private void OnPlayerLevelUp(PlayerLevelUpEvent e)
+    {
+        UpdateLevel(e.NewLevel);
+        _energyBar.MaxValue = e.NewMaxHealth;
+        _energyBar.Value    = e.NewMaxHealth;
     }
 }
