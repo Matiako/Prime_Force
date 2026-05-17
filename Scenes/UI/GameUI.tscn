@@ -1,13 +1,12 @@
-[gd_scene load_steps=2 format=3 uid="uid://gameui_prime_force"]
+[gd_scene load_steps=2 format=3 uid="uid://b3k4mj5gameui"]
 
 [ext_resource type="Script" path="res://Scripts/UI/GameUiController.cs" id="1_ctrl"]
 
-# ── GameUI — Mobile HUD ───────────────────────────────────────────────────────
-# Layout:
-#   Top     → StatsBar (Gold/Geld/Metall/Kristalle/Level/EnergyBar) + 7-slot Hotbar
-#   Bot-L   → D-Pad (4× TextureButton in a cross)
-#   Bot-R   → Action buttons (Jump / Attack / Block)
-# ─────────────────────────────────────────────────────────────────────────────
+; GameUI — Mobile HUD
+; Layout:
+;   Top     -> StatsBar (Gold/Geld/Metall/Kristalle/Level/EnergyBar) + 7-slot Hotbar
+;   Bot-L   -> D-Pad (4x TextureButton in a cross)
+;   Bot-R   -> Action buttons (Jump / Attack / Block)
 
 [node name="GameUI" type="CanvasLayer"]
 layer = 10
@@ -22,9 +21,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-# ════════════════════════════════════════════════════════════════════════════
-# TOP AREA — Stats + Hotbar
-# ════════════════════════════════════════════════════════════════════════════
+; TOP AREA — Stats + Hotbar
 
 [node name="TopArea" type="MarginContainer" parent="RootControl"]
 layout_mode = 1
@@ -40,7 +37,7 @@ theme_override_constants/margin_bottom = 4
 layout_mode = 2
 theme_override_constants/separation = 4
 
-# ── Stats bar ─────────────────────────────────────────────────────────────────
+; Stats bar
 
 [node name="StatsBar" type="HBoxContainer" parent="RootControl/TopArea/TopVBox"]
 layout_mode = 2
@@ -80,7 +77,7 @@ size_flags_vertical = 4
 max_value = 100.0
 value = 100.0
 
-# ── Hotbar — 7 weapon slots ───────────────────────────────────────────────────
+; Hotbar — 7 weapon slots
 
 [node name="Hotbar" type="HBoxContainer" parent="RootControl/TopArea/TopVBox"]
 layout_mode = 2
@@ -164,11 +161,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 stretch_mode = 5
 
-# ════════════════════════════════════════════════════════════════════════════
-# BOTTOM-LEFT — D-Pad (cross: Up / Down / Left / Right)
-# Area: 200×200 px, margin 20 px from screen edge
-# Button regions overlap in the centre (80×80 each, 60 px offset)
-# ════════════════════════════════════════════════════════════════════════════
+; BOTTOM-LEFT — D-Pad (cross: Up / Down / Left / Right)
+; Area: 200x200 px, margin 20 px from screen edge
 
 [node name="DPadArea" type="Control" parent="RootControl"]
 layout_mode = 1
@@ -217,10 +211,8 @@ offset_top = 60.0
 offset_right = 200.0
 offset_bottom = 140.0
 
-# ════════════════════════════════════════════════════════════════════════════
-# BOTTOM-RIGHT — Action buttons (Jump / Attack / Block) — vertical stack
-# Buttons: 80×80 px, 10 px gap → total height 260 px
-# ════════════════════════════════════════════════════════════════════════════
+; BOTTOM-RIGHT — Action buttons (Jump / Attack / Block) — vertical stack
+; Buttons: 80x80 px, 10 px gap -> total height 260 px
 
 [node name="ActionArea" type="Control" parent="RootControl"]
 layout_mode = 1
