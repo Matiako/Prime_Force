@@ -7,7 +7,7 @@ It is the single source of truth for session continuity.
 
 ## Project overview
 
-Prime Force is a Godot 4.6.2 (.NET/C#) 3D action platformer with Soulslike mechanics and math puzzles, built for educational use in EU schools (GDPR — local saves only, AES-256 encrypted).
+Prime Force is a Godot 4.6.3 (.NET/C#) 3D action platformer with Soulslike mechanics and math puzzles, built for educational use in EU schools (GDPR — local saves only, AES-256 encrypted).
 
 **Core rule:** All business logic is pure C# (no Godot types). Godot Nodes are thin adapters only. Strict SOLID — especially DIP and ISP.
 
