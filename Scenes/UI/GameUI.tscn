@@ -1,0 +1,255 @@
+[gd_scene load_steps=2 format=3 uid="uid://gameui_prime_force"]
+
+[ext_resource type="Script" path="res://Scripts/UI/GameUiController.cs" id="1_ctrl"]
+
+# ── GameUI — Mobile HUD ───────────────────────────────────────────────────────
+# Layout:
+#   Top     → StatsBar (Gold/Geld/Metall/Kristalle/Level/EnergyBar) + 7-slot Hotbar
+#   Bot-L   → D-Pad (4× TextureButton in a cross)
+#   Bot-R   → Action buttons (Jump / Attack / Block)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[node name="GameUI" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_ctrl")
+
+[node name="RootControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+# ════════════════════════════════════════════════════════════════════════════
+# TOP AREA — Stats + Hotbar
+# ════════════════════════════════════════════════════════════════════════════
+
+[node name="TopArea" type="MarginContainer" parent="RootControl"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 136.0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="TopVBox" type="VBoxContainer" parent="RootControl/TopArea"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+# ── Stats bar ─────────────────────────────────────────────────────────────────
+
+[node name="StatsBar" type="HBoxContainer" parent="RootControl/TopArea/TopVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0.0, 36.0)
+theme_override_constants/separation = 16
+
+[node name="GoldLabel" type="Label" parent="RootControl/TopArea/TopVBox/StatsBar"]
+layout_mode = 2
+text = "Gold: 0"
+vertical_alignment = 1
+
+[node name="GeldLabel" type="Label" parent="RootControl/TopArea/TopVBox/StatsBar"]
+layout_mode = 2
+text = "Geld: 0"
+vertical_alignment = 1
+
+[node name="MetallLabel" type="Label" parent="RootControl/TopArea/TopVBox/StatsBar"]
+layout_mode = 2
+text = "Metall: 0"
+vertical_alignment = 1
+
+[node name="KristalleLabel" type="Label" parent="RootControl/TopArea/TopVBox/StatsBar"]
+layout_mode = 2
+text = "Kristalle: 0"
+vertical_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="RootControl/TopArea/TopVBox/StatsBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Level: 1"
+vertical_alignment = 1
+
+[node name="EnergyBar" type="ProgressBar" parent="RootControl/TopArea/TopVBox/StatsBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(180.0, 24.0)
+size_flags_vertical = 4
+max_value = 100.0
+value = 100.0
+
+# ── Hotbar — 7 weapon slots ───────────────────────────────────────────────────
+
+[node name="Hotbar" type="HBoxContainer" parent="RootControl/TopArea/TopVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="WeaponSlot0" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+[node name="WeaponSlot1" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+[node name="WeaponSlot2" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+[node name="WeaponSlot3" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+[node name="WeaponSlot4" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+[node name="WeaponSlot5" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+[node name="WeaponSlot6" type="Panel" parent="RootControl/TopArea/TopVBox/Hotbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72.0, 72.0)
+
+[node name="WeaponIcon" type="TextureRect" parent="RootControl/TopArea/TopVBox/Hotbar/WeaponSlot6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch_mode = 5
+
+# ════════════════════════════════════════════════════════════════════════════
+# BOTTOM-LEFT — D-Pad (cross: Up / Down / Left / Right)
+# Area: 200×200 px, margin 20 px from screen edge
+# Button regions overlap in the centre (80×80 each, 60 px offset)
+# ════════════════════════════════════════════════════════════════════════════
+
+[node name="DPadArea" type="Control" parent="RootControl"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_right = 0.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = 220.0
+offset_top = -220.0
+offset_bottom = -20.0
+
+[node name="DPadBackground" type="ColorRect" parent="RootControl/DPadArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.15, 0.15, 0.15, 0.45)
+mouse_filter = 2
+
+[node name="DPadUp" type="TextureButton" parent="RootControl/DPadArea"]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 0.0
+offset_right = 140.0
+offset_bottom = 80.0
+
+[node name="DPadDown" type="TextureButton" parent="RootControl/DPadArea"]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 120.0
+offset_right = 140.0
+offset_bottom = 200.0
+
+[node name="DPadLeft" type="TextureButton" parent="RootControl/DPadArea"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 60.0
+offset_right = 80.0
+offset_bottom = 140.0
+
+[node name="DPadRight" type="TextureButton" parent="RootControl/DPadArea"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 60.0
+offset_right = 200.0
+offset_bottom = 140.0
+
+# ════════════════════════════════════════════════════════════════════════════
+# BOTTOM-RIGHT — Action buttons (Jump / Attack / Block) — vertical stack
+# Buttons: 80×80 px, 10 px gap → total height 260 px
+# ════════════════════════════════════════════════════════════════════════════
+
+[node name="ActionArea" type="Control" parent="RootControl"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -110.0
+offset_right = -20.0
+offset_top = -280.0
+offset_bottom = -20.0
+
+[node name="JumpButton" type="TextureButton" parent="RootControl/ActionArea"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 0.0
+offset_right = 90.0
+offset_bottom = 80.0
+
+[node name="AttackButton" type="TextureButton" parent="RootControl/ActionArea"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 90.0
+offset_right = 90.0
+offset_bottom = 170.0
+
+[node name="BlockButton" type="TextureButton" parent="RootControl/ActionArea"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 180.0
+offset_right = 90.0
+offset_bottom = 260.0
