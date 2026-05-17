@@ -6,7 +6,7 @@
 ; Layout:
 ;   Top     -> StatsBar (Gold/Geld/Metall/Kristalle/Level/EnergyBar) + 7-slot Hotbar
 ;   Bot-L   -> D-Pad (4x TextureButton in a cross)
-;   Bot-R   -> Action buttons (Jump / Attack / Block)
+;   Bot-R   -> Action buttons: SKOK (left) | BLOK/ATAK stack (right)
 
 [node name="GameUI" type="CanvasLayer"]
 layer = 10
@@ -211,7 +211,9 @@ offset_top = 60.0
 offset_right = 200.0
 offset_bottom = 140.0
 
-; BOTTOM-RIGHT — Action buttons (Jump / Attack / Block) — VBoxContainer stack
+; BOTTOM-RIGHT — Action buttons: SKOK (left, tall) | BLOK over ATAK (right VBox)
+; Layout: HBox[ JumpButton | VBox[ BlockButton / AttackButton ] ]
+; ActionArea: 190x170 px, 20 px margin from screen edge
 
 [node name="ActionArea" type="Control" parent="RootControl"]
 layout_mode = 1
@@ -219,32 +221,37 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = -100.0
+offset_left = -190.0
 offset_right = -20.0
-offset_top = -280.0
+offset_top = -190.0
 offset_bottom = -20.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="RootControl/ActionArea"]
+[node name="HBoxContainer" type="HBoxContainer" parent="RootControl/ActionArea"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_constants/separation = 10
 
-[node name="JumpButton" type="Button" parent="RootControl/ActionArea/VBoxContainer"]
+[node name="JumpButton" type="Button" parent="RootControl/ActionArea/HBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(80.0, 80.0)
-size_flags_horizontal = 4
+size_flags_vertical = 3
 text = "SKOK"
 
-[node name="AttackButton" type="Button" parent="RootControl/ActionArea/VBoxContainer"]
+[node name="AttackBlockVBox" type="VBoxContainer" parent="RootControl/ActionArea/HBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(80.0, 80.0)
-size_flags_horizontal = 4
-text = "ATAK"
+size_flags_vertical = 3
+theme_override_constants/separation = 10
 
-[node name="BlockButton" type="Button" parent="RootControl/ActionArea/VBoxContainer"]
+[node name="BlockButton" type="Button" parent="RootControl/ActionArea/HBoxContainer/AttackBlockVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(80.0, 80.0)
-size_flags_horizontal = 4
+size_flags_vertical = 3
 text = "BLOK"
+
+[node name="AttackButton" type="Button" parent="RootControl/ActionArea/HBoxContainer/AttackBlockVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(80.0, 80.0)
+size_flags_vertical = 3
+text = "ATAK"
