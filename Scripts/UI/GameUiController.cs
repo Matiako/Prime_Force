@@ -31,9 +31,9 @@ public partial class GameUiController : CanvasLayer
 
     // ── Action buttons ────────────────────────────────────────────────────────
 
-    [Export] private TextureButton JumpButton   = null!;
-    [Export] private TextureButton AttackButton = null!;
-    [Export] private TextureButton BlockButton  = null!;
+    [Export] private Button JumpButton   = null!;
+    [Export] private Button AttackButton = null!;
+    [Export] private Button BlockButton  = null!;
 
     // Resolved by path — no Inspector wiring needed for slots
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[7];

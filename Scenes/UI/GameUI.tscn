@@ -211,8 +211,7 @@ offset_top = 60.0
 offset_right = 200.0
 offset_bottom = 140.0
 
-; BOTTOM-RIGHT — Action buttons (Jump / Attack / Block) — vertical stack
-; Buttons: 80x80 px, 10 px gap -> total height 260 px
+; BOTTOM-RIGHT — Action buttons (Jump / Attack / Block) — VBoxContainer stack
 
 [node name="ActionArea" type="Control" parent="RootControl"]
 layout_mode = 1
@@ -220,28 +219,32 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = -110.0
+offset_left = -100.0
 offset_right = -20.0
 offset_top = -280.0
 offset_bottom = -20.0
 
-[node name="JumpButton" type="TextureButton" parent="RootControl/ActionArea"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 0.0
-offset_right = 90.0
-offset_bottom = 80.0
+[node name="VBoxContainer" type="VBoxContainer" parent="RootControl/ActionArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 10
 
-[node name="AttackButton" type="TextureButton" parent="RootControl/ActionArea"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 90.0
-offset_right = 90.0
-offset_bottom = 170.0
+[node name="JumpButton" type="Button" parent="RootControl/ActionArea/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(80.0, 80.0)
+size_flags_horizontal = 4
+text = "SKOK"
 
-[node name="BlockButton" type="TextureButton" parent="RootControl/ActionArea"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 180.0
-offset_right = 90.0
-offset_bottom = 260.0
+[node name="AttackButton" type="Button" parent="RootControl/ActionArea/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(80.0, 80.0)
+size_flags_horizontal = 4
+text = "ATAK"
+
+[node name="BlockButton" type="Button" parent="RootControl/ActionArea/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(80.0, 80.0)
+size_flags_horizontal = 4
+text = "BLOK"
