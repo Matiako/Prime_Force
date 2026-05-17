@@ -49,21 +49,31 @@ public partial class GameUiController : CanvasLayer
 
     public override void _Ready()
     {
-        GD.Print("[GameUI] _Ready() called");
         ResolveNodes();
-        GD.Print("[GameUI] Nodes resolved");
         ResolveWeaponSlotIcons();
         ConnectDPad();
-        GD.Print("[GameUI] D-Pad connected");
         ConnectActionButtons();
-        GD.Print("[GameUI] Action buttons connected");
         InitStatsFromProgression();
         SubscribeToEvents();
-        GD.Print("[GameUI] Initialization complete");
     }
 
     public override void _ExitTree()
     {
+        // Disconnect D-Pad signals
+        if (_dpadUp != null)
+        {
+            _dpadUp.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+            _dpadUp.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+            _dpadDown.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+            _dpadDown.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+            _dpadLeft.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+            _dpadLeft.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+            _dpadRight.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+            _dpadRight.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+        }
+
+        // Action button events are automatically unsubscribed when node is freed
+
         _eventBus?.Unsubscribe<PlayerLevelUpEvent>(OnPlayerLevelUp);
     }
 
@@ -88,34 +98,24 @@ public partial class GameUiController : CanvasLayer
 
     private void ResolveNodes()
     {
-        try
-        {
-            const string stats  = "RootControl/TopArea/TopVBox/StatsBar";
-            _goldLabel      = GetNode<Label>($"{stats}/GoldLabel");
-            _geldLabel      = GetNode<Label>($"{stats}/GeldLabel");
-            _metallLabel    = GetNode<Label>($"{stats}/MetallLabel");
-            _kristalleLabel = GetNode<Label>($"{stats}/KristalleLabel");
-            _levelLabel     = GetNode<Label>($"{stats}/LevelLabel");
-            _energyBar      = GetNode<ProgressBar>($"{stats}/EnergyBar");
+        const string stats  = "RootControl/TopArea/TopVBox/StatsBar";
+        _goldLabel      = GetNode<Label>($"{stats}/GoldLabel");
+        _geldLabel      = GetNode<Label>($"{stats}/GeldLabel");
+        _metallLabel    = GetNode<Label>($"{stats}/MetallLabel");
+        _kristalleLabel = GetNode<Label>($"{stats}/KristalleLabel");
+        _levelLabel     = GetNode<Label>($"{stats}/LevelLabel");
+        _energyBar      = GetNode<ProgressBar>($"{stats}/EnergyBar");
 
-            const string dpad   = "RootControl/DPadArea";
-            _dpadUp    = GetNode<Button>($"{dpad}/DPadUp");
-            _dpadDown  = GetNode<Button>($"{dpad}/DPadDown");
-            _dpadLeft  = GetNode<Button>($"{dpad}/DPadLeft");
-            _dpadRight = GetNode<Button>($"{dpad}/DPadRight");
+        const string dpad   = "RootControl/DPadArea";
+        _dpadUp    = GetNode<Button>($"{dpad}/DPadUp");
+        _dpadDown  = GetNode<Button>($"{dpad}/DPadDown");
+        _dpadLeft  = GetNode<Button>($"{dpad}/DPadLeft");
+        _dpadRight = GetNode<Button>($"{dpad}/DPadRight");
 
-            const string action = "RootControl/ActionArea/HBoxContainer";
-            _jumpButton   = GetNode<Button>($"{action}/JumpButton");
-            _attackButton = GetNode<Button>($"{action}/AttackBlockVBox/AttackButton");
-            _blockButton  = GetNode<Button>($"{action}/AttackBlockVBox/BlockButton");
-
-            GD.Print("[GameUI] All nodes resolved successfully");
-        }
-        catch (System.Exception ex)
-        {
-            GD.PrintErr($"[GameUI] Failed to resolve nodes: {ex.Message}");
-            GD.PrintErr($"[GameUI] Stack trace: {ex.StackTrace}");
-        }
+        const string action = "RootControl/ActionArea/HBoxContainer";
+        _jumpButton   = GetNode<Button>($"{action}/JumpButton");
+        _attackButton = GetNode<Button>($"{action}/AttackBlockVBox/AttackButton");
+        _blockButton  = GetNode<Button>($"{action}/AttackBlockVBox/BlockButton");
     }
 
     private void ResolveWeaponSlotIcons()
@@ -129,21 +129,22 @@ public partial class GameUiController : CanvasLayer
 
     private void ConnectDPad()
     {
-        _dpadUp.ButtonDown    += OnDPadChanged;
-        _dpadUp.ButtonUp      += OnDPadChanged;
-        _dpadDown.ButtonDown  += OnDPadChanged;
-        _dpadDown.ButtonUp    += OnDPadChanged;
-        _dpadLeft.ButtonDown  += OnDPadChanged;
-        _dpadLeft.ButtonUp    += OnDPadChanged;
-        _dpadRight.ButtonDown += OnDPadChanged;
-        _dpadRight.ButtonUp   += OnDPadChanged;
+        // Godot 4: button_down/button_up are signals, not C# events — use Connect()
+        _dpadUp.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+        _dpadUp.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+        _dpadDown.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+        _dpadDown.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+        _dpadLeft.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+        _dpadLeft.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
+        _dpadRight.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
+        _dpadRight.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
     }
 
     private void ConnectActionButtons()
     {
-        _jumpButton.Pressed   += () => { GD.Print("[GameUI] Jump pressed"); EmitSignal(SignalName.JumpPressed); };
-        _attackButton.Pressed += () => { GD.Print("[GameUI] Attack pressed"); EmitSignal(SignalName.AttackPressed); };
-        _blockButton.Pressed  += () => { GD.Print("[GameUI] Block pressed"); EmitSignal(SignalName.BlockPressed); };
+        _jumpButton.Pressed   += () => EmitSignal(SignalName.JumpPressed);
+        _attackButton.Pressed += () => EmitSignal(SignalName.AttackPressed);
+        _blockButton.Pressed  += () => EmitSignal(SignalName.BlockPressed);
     }
 
     // ── Private — progression init & event subscription ───────────────────────
@@ -175,7 +176,6 @@ public partial class GameUiController : CanvasLayer
         var direction = new Vector2(
             (_dpadRight.ButtonPressed ? 1f : 0f) - (_dpadLeft.ButtonPressed ? 1f : 0f),
             (_dpadDown.ButtonPressed  ? 1f : 0f) - (_dpadUp.ButtonPressed   ? 1f : 0f));
-        GD.Print($"[GameUI] D-Pad changed: {direction}");
         EmitSignal(SignalName.MovementChanged, direction);
     }
 

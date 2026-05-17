@@ -27,3 +27,6 @@ export_presets.cfg
 
 # Saves are local-only (GDPR) — never commit
 saves/
+
+# Claude Code local settings
+.claude/settings.local.json

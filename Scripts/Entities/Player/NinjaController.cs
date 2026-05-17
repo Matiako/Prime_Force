@@ -75,15 +75,10 @@ public partial class NinjaController : CharacterBody3D
 
     // ── Input handlers — wired via GameUiController signals in Main.tscn ──────
 
-    public void OnMovementChanged(Vector2 direction)
-    {
-        GD.Print($"[Ninja] OnMovementChanged: {direction}");
-        _moveInput = direction;
-    }
+    public void OnMovementChanged(Vector2 direction) => _moveInput = direction;
 
     public void OnJumpPressed()
     {
-        GD.Print($"[Ninja] OnJumpPressed, IsOnFloor={IsOnFloor()}");
         if (IsOnFloor())
             Velocity = Velocity with { Y = JumpVelocity };
     }
