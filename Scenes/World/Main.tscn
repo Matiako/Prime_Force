@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://cwm4n1gmain01"]
+[gd_scene load_steps=8 format=3 uid="uid://cwm4n1gmain01"]
 
 [ext_resource type="PackedScene" uid="uid://b3k4mj5gameui" path="res://Scenes/UI/GameUI.tscn" id="1_gameui"]
 [ext_resource type="Script" uid="uid://touw8mlarpja" path="res://Scripts/Entities/Player/NinjaController.cs" id="2_ninja"]
+[ext_resource type="Script" path="res://Scripts/World/CameraController.cs" id="3_camera"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(40.0, 0.5, 10.0)
@@ -30,6 +31,7 @@ shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 4, 12)
+script = ExtResource("3_camera")
 
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
