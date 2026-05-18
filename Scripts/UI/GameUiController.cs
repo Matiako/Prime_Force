@@ -5,15 +5,6 @@ using PrimeForce.Core.Services;
 
 namespace PrimeForce.UI;
 
-/// <summary>
-/// Mobile HUD controller. Wires all UI nodes via GetNode (no Inspector [Export] needed),
-/// reads initial state from PlayerProgressionManager, and reacts to PlayerLevelUpEvent.
-///
-/// Outputs Godot signals for game-world consumers (NinjaController etc.):
-///   MovementChanged(Vector2) — emitted on every D-Pad press/release
-///   JumpPressed / AttackPressed / BlockPressed — emitted on button press
-/// Connect these signals in the parent game scene.
-/// </summary>
 public partial class GameUiController : CanvasLayer
 {
     // ── Cached node references ────────────────────────────────────────────────
@@ -25,10 +16,11 @@ public partial class GameUiController : CanvasLayer
     private Label       _levelLabel     = null!;
     private ProgressBar _energyBar      = null!;
 
-    private Button _dpadUp    = null!;
-    private Button _dpadDown  = null!;
-    private Button _dpadLeft  = null!;
-    private Button _dpadRight = null!;
+    private Control _dpadArea  = null!;
+    private Button  _dpadUp    = null!;
+    private Button  _dpadDown  = null!;
+    private Button  _dpadLeft  = null!;
+    private Button  _dpadRight = null!;
 
     private Button _jumpButton   = null!;
     private Button _attackButton = null!;
@@ -37,6 +29,12 @@ public partial class GameUiController : CanvasLayer
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[7];
 
     private IEventBus? _eventBus;
+
+    // ── D-Pad multi-touch tracking ────────────────────────────────────────────
+
+    // Tracks which touch/mouse input "owns" the D-Pad.
+    // -1 = none active, >=0 = touch index, -2 = mouse (desktop).
+    private int _dpadTouchIndex = -1;
 
     // ── Output signals ────────────────────────────────────────────────────────
 
@@ -51,7 +49,6 @@ public partial class GameUiController : CanvasLayer
     {
         ResolveNodes();
         ResolveWeaponSlotIcons();
-        ConnectDPad();
         ConnectActionButtons();
         InitStatsFromProgression();
         SubscribeToEvents();
@@ -59,22 +56,55 @@ public partial class GameUiController : CanvasLayer
 
     public override void _ExitTree()
     {
-        // Disconnect D-Pad signals
-        if (_dpadUp != null)
-        {
-            _dpadUp.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-            _dpadUp.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-            _dpadDown.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-            _dpadDown.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-            _dpadLeft.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-            _dpadLeft.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-            _dpadRight.Disconnect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-            _dpadRight.Disconnect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-        }
-
-        // Action button events are automatically unsubscribed when node is freed
-
         _eventBus?.Unsubscribe<PlayerLevelUpEvent>(OnPlayerLevelUp);
+    }
+
+    // ── D-Pad input — area-based multi-touch ─────────────────────────────────
+
+    public override void _Input(InputEvent ev)
+    {
+        var dpadRect = _dpadArea.GetGlobalRect();
+
+        if (ev is InputEventScreenTouch touch)
+        {
+            if (touch.Pressed && _dpadTouchIndex < 0 && dpadRect.HasPoint(touch.Position))
+            {
+                _dpadTouchIndex = touch.Index;
+                EmitDPadFromPosition(touch.Position, dpadRect);
+            }
+            else if (!touch.Pressed && touch.Index == _dpadTouchIndex)
+            {
+                _dpadTouchIndex = -1;
+                EmitSignal(SignalName.MovementChanged, Vector2.Zero);
+            }
+        }
+        else if (ev is InputEventScreenDrag drag && drag.Index == _dpadTouchIndex)
+        {
+            EmitDPadFromPosition(drag.Position, dpadRect);
+        }
+        else if (ev is InputEventMouseButton mouse && mouse.ButtonIndex == MouseButton.Left)
+        {
+            if (mouse.Pressed && _dpadTouchIndex < 0 && dpadRect.HasPoint(mouse.Position))
+            {
+                _dpadTouchIndex = -2;
+                EmitDPadFromPosition(mouse.Position, dpadRect);
+            }
+            else if (!mouse.Pressed && _dpadTouchIndex == -2)
+            {
+                _dpadTouchIndex = -1;
+                EmitSignal(SignalName.MovementChanged, Vector2.Zero);
+            }
+        }
+        else if (ev is InputEventMouseMotion motion && _dpadTouchIndex == -2)
+        {
+            if (dpadRect.HasPoint(motion.Position))
+                EmitDPadFromPosition(motion.Position, dpadRect);
+            else
+            {
+                _dpadTouchIndex = -1;
+                EmitSignal(SignalName.MovementChanged, Vector2.Zero);
+            }
+        }
     }
 
     // ── Public API — stats bar ────────────────────────────────────────────────
@@ -98,7 +128,7 @@ public partial class GameUiController : CanvasLayer
 
     private void ResolveNodes()
     {
-        const string stats  = "RootControl/TopArea/TopVBox/StatsBar";
+        const string stats = "RootControl/TopArea/TopVBox/StatsBar";
         _goldLabel      = GetNode<Label>($"{stats}/GoldLabel");
         _geldLabel      = GetNode<Label>($"{stats}/GeldLabel");
         _metallLabel    = GetNode<Label>($"{stats}/MetallLabel");
@@ -106,7 +136,8 @@ public partial class GameUiController : CanvasLayer
         _levelLabel     = GetNode<Label>($"{stats}/LevelLabel");
         _energyBar      = GetNode<ProgressBar>($"{stats}/EnergyBar");
 
-        const string dpad   = "RootControl/DPadArea";
+        const string dpad = "RootControl/DPadArea";
+        _dpadArea  = GetNode<Control>(dpad);
         _dpadUp    = GetNode<Button>($"{dpad}/DPadUp");
         _dpadDown  = GetNode<Button>($"{dpad}/DPadDown");
         _dpadLeft  = GetNode<Button>($"{dpad}/DPadLeft");
@@ -125,20 +156,7 @@ public partial class GameUiController : CanvasLayer
             _weaponSlotIcons[i] = GetNode<TextureRect>($"{hotbar}/WeaponSlot{i}/WeaponIcon");
     }
 
-    // ── Private — signal wiring ───────────────────────────────────────────────
-
-    private void ConnectDPad()
-    {
-        // Godot 4: button_down/button_up are signals, not C# events — use Connect()
-        _dpadUp.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-        _dpadUp.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-        _dpadDown.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-        _dpadDown.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-        _dpadLeft.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-        _dpadLeft.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-        _dpadRight.Connect(BaseButton.SignalName.ButtonDown, Callable.From(OnDPadChanged));
-        _dpadRight.Connect(BaseButton.SignalName.ButtonUp, Callable.From(OnDPadChanged));
-    }
+    // ── Private — action button wiring ───────────────────────────────────────
 
     private void ConnectActionButtons()
     {
@@ -171,11 +189,13 @@ public partial class GameUiController : CanvasLayer
 
     // ── Private — handlers ────────────────────────────────────────────────────
 
-    private void OnDPadChanged()
+    private void EmitDPadFromPosition(Vector2 position, Rect2 dpadRect)
     {
+        var offset    = position - dpadRect.GetCenter();
+        var deadzone  = dpadRect.Size.X * 0.15f;
         var direction = new Vector2(
-            (_dpadRight.ButtonPressed ? 1f : 0f) - (_dpadLeft.ButtonPressed ? 1f : 0f),
-            (_dpadDown.ButtonPressed  ? 1f : 0f) - (_dpadUp.ButtonPressed   ? 1f : 0f));
+            Mathf.Abs(offset.X) > deadzone ? Mathf.Sign(offset.X) : 0f,
+            Mathf.Abs(offset.Y) > deadzone ? Mathf.Sign(offset.Y) : 0f);
         EmitSignal(SignalName.MovementChanged, direction);
     }
 
