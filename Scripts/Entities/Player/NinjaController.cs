@@ -64,9 +64,14 @@ public partial class NinjaController : CharacterBody3D
         if (!IsOnFloor())
             velocity.Y += Gravity * (float)delta;
 
-        bool hasInput  = _moveInput.LengthSquared() > 0.01f;
-        bool hasYInput = Mathf.Abs(_moveInput.Y) > 0.1f;
-        bool hasXInput = Mathf.Abs(_moveInput.X) > 0.1f;
+        // D-Pad touch takes priority; keyboard/gamepad as fallback for editor testing
+        var inputDir = _moveInput.LengthSquared() > 0.01f
+            ? _moveInput
+            : Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
+
+        bool hasInput  = inputDir.LengthSquared() > 0.01f;
+        bool hasYInput = Mathf.Abs(inputDir.Y) > 0.1f;
+        bool hasXInput = Mathf.Abs(inputDir.X) > 0.1f;
 
         // D-Pad fully released → arm look mode so next X-only press orbits camera
         if (!hasInput)
@@ -78,20 +83,32 @@ public partial class NinjaController : CharacterBody3D
 
         bool orbitingCamera = _isInLookMode && hasXInput && !hasYInput;
         IsMoving         = hasInput && !orbitingCamera;
-        CameraOrbitInput = orbitingCamera ? _moveInput.X : 0f;
+        CameraOrbitInput = orbitingCamera ? inputDir.X : 0f;
 
         if (IsMoving)
         {
             var basis      = _camera.GlobalTransform.Basis;
             var camForward = new Vector3(-basis.Z.X, 0f, -basis.Z.Z).Normalized();
             var camRight   = new Vector3(basis.X.X,  0f,  basis.X.Z).Normalized();
-            var moveDir    = (camRight * _moveInput.X + camForward * -_moveInput.Y).Normalized();
 
-            velocity.X = moveDir.X * Speed;
-            velocity.Z = moveDir.Z * Speed;
+            // Single resultant vector — both axes combined, then projected onto floor plane
+            var moveDir = camRight * inputDir.X + camForward * -inputDir.Y;
+            moveDir.Y = 0f;
 
-            var targetAngle = Mathf.Atan2(-moveDir.X, -moveDir.Z);
-            Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
+            if (moveDir.LengthSquared() > 0.01f)
+            {
+                moveDir    = moveDir.Normalized();
+                velocity.X = moveDir.X * Speed;
+                velocity.Z = moveDir.Z * Speed;
+
+                var targetAngle = Mathf.Atan2(-moveDir.X, -moveDir.Z);
+                Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
+            }
+            else
+            {
+                velocity.X = 0f;
+                velocity.Z = 0f;
+            }
         }
         else
         {
