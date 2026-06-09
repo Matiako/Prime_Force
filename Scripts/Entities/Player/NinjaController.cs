@@ -20,8 +20,13 @@ public partial class NinjaController : CharacterBody3D
     private const float Gravity       = -20f;
     private const float RotationSpeed = 10f;
 
-    private Vector2 _moveInput  = Vector2.Zero;
-    private bool    _isBlocking = false;
+    private Vector2 _moveInput    = Vector2.Zero;
+    private bool    _isBlocking   = false;
+    private bool    _isInLookMode = false;
+
+    // Read by CameraController each frame
+    public bool  IsMoving         { get; private set; }
+    public float CameraOrbitInput { get; private set; }
 
     private NinjaCombatEntity        _combatEntity = null!;
     private ICombatCalculator        _calculator   = null!;
@@ -59,9 +64,24 @@ public partial class NinjaController : CharacterBody3D
         if (!IsOnFloor())
             velocity.Y += Gravity * (float)delta;
 
-        if (_moveInput.LengthSquared() > 0.01f)
+        bool hasInput  = _moveInput.LengthSquared() > 0.01f;
+        bool hasYInput = Mathf.Abs(_moveInput.Y) > 0.1f;
+        bool hasXInput = Mathf.Abs(_moveInput.X) > 0.1f;
+
+        // D-Pad fully released → arm look mode so next X-only press orbits camera
+        if (!hasInput)
+            _isInLookMode = true;
+
+        // Forward/back input always exits look mode and moves the character
+        if (hasYInput)
+            _isInLookMode = false;
+
+        bool orbitingCamera = _isInLookMode && hasXInput && !hasYInput;
+        IsMoving         = hasInput && !orbitingCamera;
+        CameraOrbitInput = orbitingCamera ? _moveInput.X : 0f;
+
+        if (IsMoving)
         {
-            // Camera-relative horizontal movement: D-Pad maps to camera's forward/right axes
             var basis      = _camera.GlobalTransform.Basis;
             var camForward = new Vector3(-basis.Z.X, 0f, -basis.Z.Z).Normalized();
             var camRight   = new Vector3(basis.X.X,  0f,  basis.X.Z).Normalized();
@@ -70,7 +90,6 @@ public partial class NinjaController : CharacterBody3D
             velocity.X = moveDir.X * Speed;
             velocity.Z = moveDir.Z * Speed;
 
-            // Rotate character to face movement direction
             var targetAngle = Mathf.Atan2(-moveDir.X, -moveDir.Z);
             Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
         }
