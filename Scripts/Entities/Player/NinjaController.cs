@@ -29,8 +29,9 @@ public partial class NinjaController : CharacterBody3D
     private const float JumpVelocity = 7f;
     private const float Gravity      = -20f;
 
-    private Vector2 _moveInput  = Vector2.Zero;
-    private bool    _isBlocking = false;
+    private Vector2 _moveInput     = Vector2.Zero;
+    private bool    _isBlocking    = false;
+    private bool    _prevUpPressed = false;
 
     private NinjaCombatEntity        _combatEntity = null!;
     private ICombatCalculator        _calculator   = null!;
@@ -67,7 +68,13 @@ public partial class NinjaController : CharacterBody3D
             velocity.Y += Gravity * (float)delta;
 
         velocity.X = _moveInput.X * Speed;
-        velocity.Z = _moveInput.Y * Speed;
+        velocity.Z = 0f;
+
+        // D-Pad up (negative Y in screen-space) triggers jump — edge-detected so it fires once per press
+        bool upNow = _moveInput.Y < -0.5f;
+        if (upNow && !_prevUpPressed && IsOnFloor())
+            velocity.Y = JumpVelocity;
+        _prevUpPressed = upNow;
 
         Velocity = velocity;
         MoveAndSlide();
