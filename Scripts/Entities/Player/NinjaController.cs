@@ -8,16 +8,6 @@ using PrimeForce.Localization.Interfaces;
 
 namespace PrimeForce.Entities.Player;
 
-/// <summary>
-/// Thin Godot adapter. Responsibilities:
-///   - Initialise NinjaCombatEntity from saved progression data.
-///   - Apply D-Pad movement and jump via _PhysicsProcess.
-///   - Forward attack input to ICombatCalculator.
-///   - React to PlayerLevelUpEvent and update the domain entity accordingly.
-///
-/// Input handlers (OnMovementChanged, OnJumpPressed, OnAttackButtonPressed, OnBlockPressed)
-/// are connected from GameUiController signals in Main.tscn — no direct coupling.
-/// </summary>
 public partial class NinjaController : CharacterBody3D
 {
     [Export] public string DisplayName   { get; set; } = "Ninja";
@@ -25,19 +15,20 @@ public partial class NinjaController : CharacterBody3D
 
     [Export] private EnemyController? TargetEnemy;
 
-    private const float Speed        = 5f;
-    private const float JumpVelocity = 7f;
-    private const float Gravity      = -20f;
+    private const float Speed         = 5f;
+    private const float JumpVelocity  = 7f;
+    private const float Gravity       = -20f;
+    private const float RotationSpeed = 10f;
 
-    private Vector2 _moveInput     = Vector2.Zero;
-    private bool    _isBlocking    = false;
-    private bool    _prevUpPressed = false;
+    private Vector2 _moveInput  = Vector2.Zero;
+    private bool    _isBlocking = false;
 
     private NinjaCombatEntity        _combatEntity = null!;
     private ICombatCalculator        _calculator   = null!;
     private ILocalizationProvider    _localization = null!;
     private IEventBus                _eventBus     = null!;
     private PlayerProgressionManager _progression  = null!;
+    private Camera3D                 _camera       = null!;
 
     public override void _Ready()
     {
@@ -45,6 +36,7 @@ public partial class NinjaController : CharacterBody3D
         _localization = GameServices.Instance.Get<ILocalizationProvider>();
         _eventBus     = GameServices.Instance.Get<IEventBus>();
         _progression  = GameServices.Instance.Get<PlayerProgressionManager>();
+        _camera       = GetNode<Camera3D>("../Camera3D");
 
         _combatEntity = new NinjaCombatEntity(
             entityId:    Name.ToString(),
@@ -67,14 +59,26 @@ public partial class NinjaController : CharacterBody3D
         if (!IsOnFloor())
             velocity.Y += Gravity * (float)delta;
 
-        velocity.X = _moveInput.X * Speed;
-        velocity.Z = 0f;
+        if (_moveInput.LengthSquared() > 0.01f)
+        {
+            // Camera-relative horizontal movement: D-Pad maps to camera's forward/right axes
+            var basis      = _camera.GlobalTransform.Basis;
+            var camForward = new Vector3(-basis.Z.X, 0f, -basis.Z.Z).Normalized();
+            var camRight   = new Vector3(basis.X.X,  0f,  basis.X.Z).Normalized();
+            var moveDir    = (camRight * _moveInput.X + camForward * -_moveInput.Y).Normalized();
 
-        // D-Pad up (negative Y in screen-space) triggers jump — edge-detected so it fires once per press
-        bool upNow = _moveInput.Y < -0.5f;
-        if (upNow && !_prevUpPressed && IsOnFloor())
-            velocity.Y = JumpVelocity;
-        _prevUpPressed = upNow;
+            velocity.X = moveDir.X * Speed;
+            velocity.Z = moveDir.Z * Speed;
+
+            // Rotate character to face movement direction
+            var targetAngle = Mathf.Atan2(moveDir.X, moveDir.Z);
+            Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
+        }
+        else
+        {
+            velocity.X = 0f;
+            velocity.Z = 0f;
+        }
 
         Velocity = velocity;
         MoveAndSlide();
