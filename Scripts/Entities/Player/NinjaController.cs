@@ -18,12 +18,11 @@ public partial class NinjaController : CharacterBody3D
     private const float Speed         = 5f;
     private const float JumpVelocity  = 7f;
     private const float Gravity       = -20f;
-    private const float TurnSpeed     = 3f;   // radians per second
+    private const float RotationSpeed = 15f;
 
     private Vector2 _moveInput  = Vector2.Zero;
     private bool    _isBlocking = false;
 
-    // Read by CameraController each frame
     public bool IsMoving { get; private set; }
 
     private NinjaCombatEntity        _combatEntity = null!;
@@ -65,22 +64,19 @@ public partial class NinjaController : CharacterBody3D
             ? _moveInput
             : Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
 
-        IsMoving = inputDir.LengthSquared() > 0.01f;
+        // Global-axis movement: input maps directly to world X/Z
+        var moveDir = new Vector3(inputDir.X, 0f, inputDir.Y);
+        IsMoving = moveDir.LengthSquared() > 0.01f;
 
-        // D-Pad left/right — rotate character around its own Y axis (tank controls)
-        if (Mathf.Abs(inputDir.X) > 0.1f)
-            Rotation = Rotation with { Y = Rotation.Y - inputDir.X * TurnSpeed * (float)delta };
-
-        // D-Pad up/down — move in the direction the character is currently facing
-        if (Mathf.Abs(inputDir.Y) > 0.1f)
+        if (IsMoving)
         {
-            var forward = -GlobalTransform.Basis.Z;
-            forward.Y   = 0f;
-            if (forward.LengthSquared() > 0.001f)
-                forward = forward.Normalized();
+            moveDir    = moveDir.Normalized();
+            velocity.X = moveDir.X * Speed;
+            velocity.Z = moveDir.Z * Speed;
 
-            velocity.X = forward.X * Speed * -inputDir.Y;
-            velocity.Z = forward.Z * Speed * -inputDir.Y;
+            // Rotate character to face movement direction
+            var targetAngle = Mathf.Atan2(-moveDir.X, -moveDir.Z);
+            Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
         }
         else
         {
