@@ -15,13 +15,13 @@ public partial class CameraController : Camera3D
     public override void _Ready()
     {
         _target = GetNode<Node3D>("../Ninja");
-        _yaw    = -_target.Rotation.Y;
+        _yaw    = _target.Rotation.Y;
     }
 
     public override void _Process(double delta)
     {
         // Swing yaw to stay behind the player's facing direction
-        _yaw = Mathf.LerpAngle(_yaw, -_target.Rotation.Y, SwingSpeed * (float)delta);
+        _yaw = Mathf.LerpAngle(_yaw, _target.Rotation.Y, SwingSpeed * (float)delta);
 
         var offset = new Vector3(Mathf.Sin(_yaw) * Distance, Height, Mathf.Cos(_yaw) * Distance);
         GlobalPosition = GlobalPosition.Lerp(

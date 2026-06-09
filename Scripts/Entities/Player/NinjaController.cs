@@ -71,7 +71,7 @@ public partial class NinjaController : CharacterBody3D
             velocity.Z = moveDir.Z * Speed;
 
             // Rotate character to face movement direction
-            var targetAngle = Mathf.Atan2(moveDir.X, moveDir.Z);
+            var targetAngle = Mathf.Atan2(-moveDir.X, -moveDir.Z);
             Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
         }
         else
