@@ -18,22 +18,19 @@ public partial class NinjaController : CharacterBody3D
     private const float Speed         = 5f;
     private const float JumpVelocity  = 7f;
     private const float Gravity       = -20f;
-    private const float RotationSpeed = 10f;
+    private const float TurnSpeed     = 3f;   // radians per second
 
-    private Vector2 _moveInput    = Vector2.Zero;
-    private bool    _isBlocking   = false;
-    private bool    _isInLookMode = false;
+    private Vector2 _moveInput  = Vector2.Zero;
+    private bool    _isBlocking = false;
 
     // Read by CameraController each frame
-    public bool  IsMoving         { get; private set; }
-    public float CameraOrbitInput { get; private set; }
+    public bool IsMoving { get; private set; }
 
     private NinjaCombatEntity        _combatEntity = null!;
     private ICombatCalculator        _calculator   = null!;
     private ILocalizationProvider    _localization = null!;
     private IEventBus                _eventBus     = null!;
     private PlayerProgressionManager _progression  = null!;
-    private Camera3D                 _camera       = null!;
 
     public override void _Ready()
     {
@@ -41,7 +38,6 @@ public partial class NinjaController : CharacterBody3D
         _localization = GameServices.Instance.Get<ILocalizationProvider>();
         _eventBus     = GameServices.Instance.Get<IEventBus>();
         _progression  = GameServices.Instance.Get<PlayerProgressionManager>();
-        _camera       = GetNode<Camera3D>("../Camera3D");
 
         _combatEntity = new NinjaCombatEntity(
             entityId:    Name.ToString(),
@@ -69,46 +65,22 @@ public partial class NinjaController : CharacterBody3D
             ? _moveInput
             : Input.GetVector("ui_left", "ui_right", "ui_up", "ui_down");
 
-        bool hasInput  = inputDir.LengthSquared() > 0.01f;
-        bool hasYInput = Mathf.Abs(inputDir.Y) > 0.1f;
-        bool hasXInput = Mathf.Abs(inputDir.X) > 0.1f;
+        IsMoving = inputDir.LengthSquared() > 0.01f;
 
-        // D-Pad fully released → arm look mode so next X-only press orbits camera
-        if (!hasInput)
-            _isInLookMode = true;
+        // D-Pad left/right — rotate character around its own Y axis (tank controls)
+        if (Mathf.Abs(inputDir.X) > 0.1f)
+            Rotation = Rotation with { Y = Rotation.Y - inputDir.X * TurnSpeed * (float)delta };
 
-        // Forward/back input always exits look mode and moves the character
-        if (hasYInput)
-            _isInLookMode = false;
-
-        bool orbitingCamera = _isInLookMode && hasXInput && !hasYInput;
-        IsMoving         = hasInput && !orbitingCamera;
-        CameraOrbitInput = orbitingCamera ? inputDir.X : 0f;
-
-        if (IsMoving)
+        // D-Pad up/down — move in the direction the character is currently facing
+        if (Mathf.Abs(inputDir.Y) > 0.1f)
         {
-            var basis      = _camera.GlobalTransform.Basis;
-            var camForward = new Vector3(-basis.Z.X, 0f, -basis.Z.Z).Normalized();
-            var camRight   = new Vector3(basis.X.X,  0f,  basis.X.Z).Normalized();
+            var forward = -GlobalTransform.Basis.Z;
+            forward.Y   = 0f;
+            if (forward.LengthSquared() > 0.001f)
+                forward = forward.Normalized();
 
-            // Single resultant vector — both axes combined, then projected onto floor plane
-            var moveDir = camRight * inputDir.X + camForward * -inputDir.Y;
-            moveDir.Y = 0f;
-
-            if (moveDir.LengthSquared() > 0.01f)
-            {
-                moveDir    = moveDir.Normalized();
-                velocity.X = moveDir.X * Speed;
-                velocity.Z = moveDir.Z * Speed;
-
-                var targetAngle = Mathf.Atan2(-moveDir.X, -moveDir.Z);
-                Rotation = Rotation with { Y = Mathf.LerpAngle(Rotation.Y, targetAngle, RotationSpeed * (float)delta) };
-            }
-            else
-            {
-                velocity.X = 0f;
-                velocity.Z = 0f;
-            }
+            velocity.X = forward.X * Speed * -inputDir.Y;
+            velocity.Z = forward.Z * Speed * -inputDir.Y;
         }
         else
         {

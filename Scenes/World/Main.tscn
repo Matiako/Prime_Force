@@ -5,10 +5,10 @@
 [ext_resource type="Script" path="res://Scripts/World/CameraController.cs" id="3_camera"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(40.0, 0.5, 10.0)
+size = Vector3(100.0, 0.5, 100.0)
 
 [sub_resource type="BoxMesh" id="BoxMesh_floor"]
-size = Vector3(40.0, 0.5, 10.0)
+size = Vector3(100.0, 0.5, 100.0)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ninja"]
 radius = 0.35
