@@ -9,7 +9,8 @@ public partial class MathGateController : Node3D
     [Export] public MathGrade CurrentGrade { get; set; } = MathGrade.Grade1_2;
 
     private bool   _leftIsCorrect;
-    private bool   _solved = false;
+    private bool   _solved     = false;
+    private bool   _onCooldown = false;
     private string _questionText = "";
 
     private StaticBody3D _doorLeft  = null!;
@@ -156,7 +157,7 @@ public partial class MathGateController : Node3D
 
     private void OnGateEntered(Node3D body, bool isLeft)
     {
-        if (_solved || !body.IsInGroup("player")) return;
+        if (_solved || _onCooldown || !body.IsInGroup("player")) return;
 
         if (isLeft == _leftIsCorrect)
         {
@@ -169,11 +170,18 @@ public partial class MathGateController : Node3D
         }
         else
         {
-            _questionLabel.Text = "Sprobuj jeszcze!";
+            _onCooldown = true;
+            _questionLabel.Text    = "Sprobuj jeszcze!";
+            _answerLabelLeft.Text  = "?";
+            _answerLabelRight.Text = "?";
             // New problem after delay — prevents elimination guessing
             GetTree().CreateTimer(1.5).Timeout += () =>
             {
-                if (!_solved) GenerateProblem();
+                if (!_solved)
+                {
+                    GenerateProblem();
+                    _onCooldown = false;
+                }
             };
         }
     }
