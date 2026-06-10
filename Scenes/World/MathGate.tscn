@@ -1,0 +1,113 @@
+[gd_scene load_steps=10 format=3 uid="uid://cdmathgate01"]
+
+[ext_resource type="Script" path="res://Scripts/World/MathGateController.cs" id="1_script"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_Gray"]
+albedo_color = Color(0.3, 0.3, 0.35, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Blue"]
+albedo_color = Color(0.15, 0.4, 0.9, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_Red"]
+albedo_color = Color(0.9, 0.2, 0.2, 1)
+
+[sub_resource type="BoxShape3D" id="OuterWall_Shape"]
+size = Vector3(5.0, 3.0, 0.5)
+
+[sub_resource type="BoxMesh" id="OuterWall_Mesh"]
+size = Vector3(5.0, 3.0, 0.5)
+
+[sub_resource type="BoxShape3D" id="Door_Shape"]
+size = Vector3(3.0, 3.0, 0.5)
+
+[sub_resource type="BoxMesh" id="Door_Mesh"]
+size = Vector3(3.0, 3.0, 0.5)
+
+[sub_resource type="BoxShape3D" id="Area_Shape"]
+size = Vector3(3.0, 3.0, 2.0)
+
+; Two outer wall segments + two coloured doors + area sensors + labels.
+; Player approaches from +Z. Areas trigger at z=1.5 (before hitting door at z=0).
+; DoorLeft = blue (answer on left), DoorRight = red (answer on right).
+
+[node name="MathGate" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WallLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 1.5, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="WallLeft"]
+shape = SubResource("OuterWall_Shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallLeft"]
+mesh = SubResource("OuterWall_Mesh")
+surface_material_override/0 = SubResource("Mat_Gray")
+
+[node name="WallRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 1.5, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="WallRight"]
+shape = SubResource("OuterWall_Shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallRight"]
+mesh = SubResource("OuterWall_Mesh")
+surface_material_override/0 = SubResource("Mat_Gray")
+
+[node name="DoorLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="DoorLeft"]
+shape = SubResource("Door_Shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="DoorLeft"]
+mesh = SubResource("Door_Mesh")
+surface_material_override/0 = SubResource("Mat_Blue")
+
+[node name="DoorRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 0)
+
+[node name="Collision" type="CollisionShape3D" parent="DoorRight"]
+shape = SubResource("Door_Shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="DoorRight"]
+mesh = SubResource("Door_Mesh")
+surface_material_override/0 = SubResource("Mat_Red")
+
+[node name="AreaLeft" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.5, 1.5)
+
+[node name="Collision" type="CollisionShape3D" parent="AreaLeft"]
+shape = SubResource("Area_Shape")
+
+[node name="AreaRight" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 1.5, 1.5)
+
+[node name="Collision" type="CollisionShape3D" parent="AreaRight"]
+shape = SubResource("Area_Shape")
+
+[node name="QuestionLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0.5)
+text = "? + ? = ?"
+pixel_size = 0.01
+font_size = 96
+outline_size = 6
+billboard = 1
+modulate = Color(1.0, 0.9, 0.0, 1)
+
+[node name="AnswerLabelLeft" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 3.5, 0.5)
+text = "?"
+pixel_size = 0.01
+font_size = 80
+outline_size = 6
+billboard = 1
+modulate = Color(0.4, 0.7, 1.0, 1)
+
+[node name="AnswerLabelRight" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 3.5, 0.5)
+text = "?"
+pixel_size = 0.01
+font_size = 80
+outline_size = 6
+billboard = 1
+modulate = Color(1.0, 0.4, 0.4, 1)

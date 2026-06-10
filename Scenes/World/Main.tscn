@@ -1,8 +1,9 @@
-[gd_scene load_steps=14 format=3 uid="uid://cwm4n1gmain01"]
+[gd_scene load_steps=15 format=3 uid="uid://cwm4n1gmain01"]
 
 [ext_resource type="PackedScene" uid="uid://b3k4mj5gameui" path="res://Scenes/UI/GameUI.tscn" id="1_gameui"]
 [ext_resource type="Script" uid="uid://touw8mlarpja" path="res://Scripts/Entities/Player/NinjaController.cs" id="2_ninja"]
 [ext_resource type="Script" path="res://Scripts/World/CameraController.cs" id="3_camera"]
+[ext_resource type="PackedScene" uid="uid://cdmathgate01" path="res://Scenes/World/MathGate.tscn" id="4_mathgate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(100.0, 0.5, 100.0)
@@ -89,6 +90,9 @@ surface_material_override/0 = SubResource("Mat_White")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.10, 1.44, -0.26)
 mesh = SubResource("Mesh_Eye")
 surface_material_override/0 = SubResource("Mat_White")
+
+[node name="MathGate" parent="." instance=ExtResource("4_mathgate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15)
 
 [node name="GameUI" parent="." instance=ExtResource("1_gameui")]
 

@@ -45,6 +45,7 @@ public partial class NinjaController : CharacterBody3D
             level:       _progression.Data.Level);
 
         _eventBus.Subscribe<PlayerLevelUpEvent>(OnLevelUp);
+        AddToGroup("player");
     }
 
     public override void _ExitTree()
